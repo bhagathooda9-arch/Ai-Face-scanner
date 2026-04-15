@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Attendance Auto Update + Edit</title>
+<style>
+body{margin:0;padding:20px;font-family:Arial;background:#0f172a;color:#fff}
+h1{margin-bottom:15px}
+table{width:100%;border-collapse:collapse;background:#1e293b}
+th,td{padding:10px;border:1px solid #444;text-align:center}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;margin:2px}
+.edit{background:#22c55e;color:#fff}.delete{background:#ef4444;color:#fff}
+</style>
+</head>
+<body>
+<h1>Attendance Records</h1>
+<table id="table">
+<tr><th>Name</th><th>ID</th><th>Date</th><th>Time</th><th>Action</th></tr>
+</table>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyDPDKUCZ_QJ_Lx_Q_S-stDwk9eaIFGJhko",authDomain:"face-recognization-de9e6.firebaseapp.com",projectId:"face-recognization-de9e6"});
+const db=firebase.firestore();
+const table=document.getElementById('table');
+function load(){db.collection('attendance').onSnapshot(s=>{table.innerHTML='<tr><th>Name</th><th>ID</th><th>Date</th><th>Time</th><th>Action</th></tr>';s.forEach(doc=>{let d=doc.data();table.innerHTML += `<tr><td>${d.name||''}</td><td>${d.id||''}</td><td>${d.date||''}</td><td>${d.time||''}</td><td><button class="edit" onclick="editRow('${doc.id}')">Edit</button><button class="delete" onclick="deleteRow('${doc.id}')">Delete</button></td></tr>`;});});}
+window.editRow=async function(id){const ref=db.collection('attendance').doc(id);const snap=await ref.get();const d=snap.data();let name=prompt('Edit Name',d.name||''); if(name===null)return; let empid=prompt('Edit ID',d.id||''); if(empid===null)return; let date=prompt('Edit Date',d.date||''); if(date===null)return; let time=prompt('Edit Time',d.time||''); if(time===null)return; await ref.update({name:name,id:empid,date:date,time:time}); alert('Data Updated');}
+window.deleteRow=async function(id){if(confirm('Delete this record?')){await db.collection('attendance').doc(id).delete(); alert('Deleted');}}
+load();
+</script>
+</body>
+</html>

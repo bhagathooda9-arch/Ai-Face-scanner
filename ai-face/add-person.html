@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Add Person Final Fixed</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial, sans-serif;
+    background:#0f172a;
+    color:white;
+    padding:20px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+.box,.card{
+    background:#1e293b;
+    padding:15px;
+    border-radius:14px;
+    margin-bottom:20px;
+}
+
+h1{
+    margin-bottom:15px;
+}
+
+input,select,button{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+}
+
+input,select{
+    background:#e2e8f0;
+    color:black;
+}
+
+button{
+    background:#22c55e;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+.edit{
+    background:#f59e0b;
+}
+
+.del{
+    background:#ef4444;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:15px;
+}
+
+.card img{
+    width:100%;
+    height:180px;
+    object-fit:cover;
+    border-radius:10px;
+    margin-bottom:10px;
+}
+
+#status{
+    margin-bottom:10px;
+    color:#38bdf8;
+    font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>Add Person</h1>
+
+<div class="box">
+
+<div id="status">Ready...</div>
+
+<input type="text" id="name" placeholder="Enter Name">
+
+<input type="text" id="pid" placeholder="Enter ID">
+
+<select id="gender">
+<option value="Male">Male</option>
+<option value="Female">Female</option>
+</select>
+
+<input type="file" id="image" accept="image/*">
+
+<button onclick="savePerson()">Submit / Update</button>
+
+</div>
+
+<h1>All Persons</h1>
+
+<div class="grid" id="persons"></div>
+
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+
+firebase.initializeApp({
+    apiKey:"AIzaSyDPDKUCZ_QJ_Lx_Q_S-stDwk9eaIFGJhko",
+    authDomain:"face-recognization-de9e6.firebaseapp.com",
+    projectId:"face-recognization-de9e6"
+});
+
+const db = firebase.firestore();
+
+const statusBox = document.getElementById("status");
+
+loadPersons();
+
+function savePerson(){
+
+    let personName = document.getElementById("name").value.trim();
+    let pid = document.getElementById("pid").value.trim();
+    let gender = document.getElementById("gender").value;
+    let file = document.getElementById("image").files[0];
+
+    if(personName === "" || pid === ""){
+        alert("Please fill all fields");
+        return;
+    }
+
+    statusBox.innerHTML = "Saving...";
+
+    if(file){
+
+        let reader = new FileReader();
+
+        reader.onload = function(e){
+
+            let img = e.target.result;
+
+            saveData(personName,pid,gender,img);
+
+        };
+
+        reader.readAsDataURL(file);
+
+    }else{
+
+        db.collection("persons").doc(pid).get().then(doc=>{
+
+            let oldImage = "";
+
+            if(doc.exists){
+                oldImage = doc.data().image;
+            }
+
+            saveData(personName,pid,gender,oldImage);
+
+        });
+
+    }
+
+}
+
+
+
+function saveData(name,pid,gender,img){
+
+    db.collection("persons").doc(pid).set({
+        name:name,
+        id:pid,
+        gender:gender,
+        image:img,
+        updated:Date.now()
+    })
+
+    .then(()=>{
+
+        statusBox.innerHTML = "Saved Successfully ✅";
+
+        document.getElementById("name").value="";
+        document.getElementById("pid").value="";
+        document.getElementById("image").value="";
+        document.getElementById("gender").value="Male";
+
+    })
+
+    .catch(error=>{
+        statusBox.innerHTML = "Error Saving ❌";
+        alert(error.message);
+    });
+
+}
+
+
+
+function loadPersons(){
+
+    db.collection("persons").orderBy("updated","desc")
+    .onSnapshot(snapshot=>{
+
+        let box = document.getElementById("persons");
+
+        box.innerHTML = "";
+
+        snapshot.forEach(doc=>{
+
+            let d = doc.data();
+
+            box.innerHTML += `
+            <div class="card">
+
+                <img src="${d.image || 'https://via.placeholder.com/300x180?text=No+Image'}">
+
+                <h3>${d.name}</h3>
+
+                <p>ID : ${d.id}</p>
+
+                <p>Gender : ${d.gender}</p>
+
+                <button class="edit"
+                onclick="editData('${d.id}','${d.name}','${d.gender}')">
+                Edit
+                </button>
+
+                <button class="del"
+                onclick="deleteData('${d.id}')">
+                Delete
+                </button>
+
+            </div>
+            `;
+
+        });
+
+    });
+
+}
+
+
+
+function editData(id,name,gender){
+
+    document.getElementById("name").value = name;
+    document.getElementById("pid").value = id;
+    document.getElementById("gender").value = gender;
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+
+}
+
+
+
+function deleteData(id){
+
+    if(confirm("Delete this person?")){
+
+        db.collection("persons").doc(id).delete()
+        .then(()=>{
+            alert("Deleted Successfully");
+        });
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>

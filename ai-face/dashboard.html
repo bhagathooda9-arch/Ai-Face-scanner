@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="js/firebase.js"></script>
+<body>
+
+<h1>Dashboard</h1>
+
+<button onclick="go('add-person.html')">Add Person</button>
+<button onclick="go('scan.html')">Scan Attendance</button>
+<button onclick="go('attendence.html')">View Attendance</button>
+
+<script>
+function go(page){
+  window.location.href = page;
+}
+</script>
+
+</body>
+</html>
